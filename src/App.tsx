@@ -52,9 +52,7 @@ export default function App() {
     }
   });
   
-  const [showTutorial, setShowTutorial] = useState(() => 
-    localStorage.getItem('safetySwipeSeenTutorial') !== 'true'
-  );
+  const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
   
   const [isHighContrast, setIsHighContrast] = useState(() => 
@@ -270,6 +268,12 @@ export default function App() {
     if (isSuddenDeath) unlockAchievement('sudden_death_unlock'); // potential achievement
     
     soundEffects.click();
+
+    // Show tutorial on first-time playing instead of home screen load
+    if (localStorage.getItem('safetySwipeSeenTutorial') !== 'true') {
+      setShowTutorial(true);
+      setTutorialStep(0);
+    }
   };
 
   const handleTimeout = useCallback(() => {
@@ -277,7 +281,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (gameState !== 'playing' || isPaused) return;
+    if (gameState !== 'playing' || isPaused || showTutorial) return;
     
     const interval = setInterval(() => {
       setTimeLeft(prev => {
@@ -299,7 +303,7 @@ export default function App() {
     }, 50);
     
     return () => clearInterval(interval);
-  }, [gameState, currentIndex, isPaused, handleTimeout]);
+  }, [gameState, currentIndex, isPaused, showTutorial, handleTimeout]);
 
   const triggerShake = () => {
     setShake(true);
@@ -581,7 +585,7 @@ export default function App() {
   };
   
   const handleShare = () => {
-    const text = `I just scored ${score} points in Safety Swipe! Can you beat me? ⚡🔌`;
+    const text = `I just scored ${score} points in Safety Swipe! Can you beat me? ⚡🔌\nPlay here: https://safetyswipe.netlify.app`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
       setShareText('Copied!');
@@ -2216,7 +2220,7 @@ export default function App() {
 
     const shareOnSocial = (platform: 'linkedin' | 'facebook' | 'whatsapp' | 'instagram') => {
       soundEffects.click();
-      const shareUrl = window.location.href;
+      const shareUrl = 'https://safetyswipe.netlify.app';
       const text = `I just scored ${score} points in Safety Swipe! Can you beat me? ⚡🔌`;
       
       if (platform === 'linkedin') {
