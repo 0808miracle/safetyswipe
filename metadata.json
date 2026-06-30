@@ -1,0 +1,6 @@
+{
+  "name": "Safety Swipe",
+  "description": "A mobile-first web game designed to teach basic electrical safety via a swipe-based card interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
