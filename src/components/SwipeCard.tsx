@@ -164,7 +164,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ scenario, onSwipe, leaveX 
           </div>
           
           {/* Main scenario text */}
-          <h2 className="text-lg sm:text-2xl md:text-3xl font-black text-slate-800 leading-snug px-1 sm:px-4 max-w-sm">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-black text-slate-800 leading-snug px-1 sm:px-4 max-w-sm">
             {scenario.text}
           </h2>
         </div>

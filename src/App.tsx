@@ -152,9 +152,9 @@ export default function App() {
   }, []);
 
   const getCardTime = (difficulty?: string) => {
-    let t = 10000;
-    if (difficulty === 'hard') t = 6000;
-    else if (difficulty === 'medium') t = 8000;
+    let t = 15000;
+    if (difficulty === 'hard') t = 11000;
+    else if (difficulty === 'medium') t = 13000;
     
     if (timeDifficulty === 'relaxed') t = t * 2;
     else if (timeDifficulty === 'blitz') t = Math.round(t * 0.5);
@@ -878,16 +878,18 @@ export default function App() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }} 
-      className="flex flex-col items-center justify-center h-full max-w-md mx-auto px-6 text-center w-full"
+      className="flex flex-col items-center justify-between h-full max-w-md mx-auto px-6 py-6 text-center w-full overflow-y-auto no-scrollbar"
     >
-      <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-md border border-blue-100">
-        <BookOpen size={32} />
+      <div className="flex flex-col items-center shrink-0 w-full">
+        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-md border border-blue-100">
+          <BookOpen size={32} />
+        </div>
+        
+        <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">Rules & Regulations</h1>
+        <p className="text-sm sm:text-base text-slate-500 mb-4 sm:mb-6 font-medium">
+          Welcome, <span className="font-extrabold text-slate-800">👷 {playerName}</span>! Please review the safety protocol before beginning.
+        </p>
       </div>
-      
-      <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">Rules & Regulations</h1>
-      <p className="text-sm sm:text-base text-slate-500 mb-6 font-medium">
-        Welcome, <span className="font-extrabold text-slate-800">👷 {playerName}</span>! Please review the safety protocol before beginning.
-      </p>
 
       {/* Rules Card/List */}
       <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 w-full text-left space-y-5 mb-6">
@@ -930,10 +932,10 @@ export default function App() {
         </div>
       </div>
 
-      <div className="flex gap-2 w-full">
+      <div className="flex gap-2 w-full mt-auto pt-4 shrink-0 pb-6">
         <button 
           onClick={() => { setGameState('start'); soundEffects.click(); }}
-          className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-bold text-sm transition-all"
+          className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-bold text-sm transition-all cursor-pointer"
         >
           Leave Game
         </button>
