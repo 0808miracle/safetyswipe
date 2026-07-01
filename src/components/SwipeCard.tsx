@@ -137,20 +137,20 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ scenario, onSwipe, leaveX 
         {/* Dynamic Stamp Overlays */}
         <motion.div
           style={{ opacity: hazardOpacity }}
-          className="absolute top-14 left-4 sm:top-16 sm:left-6 rotate-[-12deg] border-4 border-red-500 text-red-500 font-black text-[10px] sm:text-xs md:text-sm px-2.5 py-1 rounded-lg uppercase tracking-widest pointer-events-none select-none z-20 shadow-xs"
+          className="absolute top-14 left-4 sm:top-16 sm:left-6 rotate-[-12deg] border-4 border-red-500 text-red-500 font-black text-xs sm:text-sm md:text-base px-3 py-1.5 rounded-lg uppercase tracking-widest pointer-events-none select-none z-20 shadow-xs"
         >
           ⚠️ HAZARD
         </motion.div>
         <motion.div
           style={{ opacity: safeOpacity }}
-          className="absolute top-14 right-4 sm:top-16 sm:right-6 rotate-[12deg] border-4 border-emerald-500 text-emerald-500 font-black text-[10px] sm:text-xs md:text-sm px-2.5 py-1 rounded-lg uppercase tracking-widest pointer-events-none select-none z-20 shadow-xs"
+          className="absolute top-14 right-4 sm:top-16 sm:right-6 rotate-[12deg] border-4 border-emerald-500 text-emerald-500 font-black text-xs sm:text-sm md:text-base px-3 py-1.5 rounded-lg uppercase tracking-widest pointer-events-none select-none z-20 shadow-xs"
         >
           ✅ SAFE
         </motion.div>
         
         {/* Category Pill Tag */}
         <div className="mt-2 shrink-0">
-          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-sm border ${details.color}`}>
+          <div className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-black uppercase tracking-wider shadow-sm border ${details.color}`}>
             <span>{details.icon}</span>
             <span>{details.label}</span>
           </div>
@@ -164,15 +164,15 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ scenario, onSwipe, leaveX 
           </div>
           
           {/* Main scenario text */}
-          <h2 className="text-base sm:text-xl md:text-2xl font-black text-slate-800 leading-snug px-1 sm:px-4 max-w-sm">
+          <h2 className="text-lg sm:text-2xl md:text-3xl font-black text-slate-800 leading-snug px-1 sm:px-4 max-w-sm">
             {scenario.text}
           </h2>
         </div>
 
         {/* Bottom Swipe helper info */}
-        <div className="mt-auto shrink-0 w-full pt-3 border-t border-slate-50 flex flex-col gap-1">
-          <div className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest">Swipe or tap below to decide</div>
-          <div className="flex gap-6 justify-center font-black text-xs sm:text-sm">
+        <div className="mt-auto shrink-0 w-full pt-3 border-t border-slate-50 flex flex-col gap-1.5">
+          <div className="text-xs sm:text-sm text-slate-400 font-bold uppercase tracking-widest">Swipe or tap below to decide</div>
+          <div className="flex gap-6 justify-center font-black text-sm sm:text-base">
             <motion.span className="text-red-500" style={{ opacity: useTransform(x, [-100, 0, 100], [1, 0.5, 0.2]) }}>
               ← HAZARD
             </motion.span>

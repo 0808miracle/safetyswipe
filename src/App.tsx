@@ -801,9 +801,7 @@ export default function App() {
               {[
                 { name: 'Click', effect: () => soundEffects.click() },
                 { name: 'Correct', effect: () => soundEffects.correct() },
-                { name: 'Perfect', effect: () => soundEffects.perfect() },
-                { name: 'Error', effect: () => soundEffects.incorrect() },
-                { name: 'Combo', effect: () => soundEffects.streak(5) }
+                { name: 'Perfect', effect: () => soundEffects.perfect() }
               ].map(s => (
                 <button
                   key={s.name}
@@ -892,59 +890,42 @@ export default function App() {
       </p>
 
       {/* Rules Card/List */}
-      <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 w-full text-left space-y-4 mb-6">
+      <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 w-full text-left space-y-5 mb-6">
         {/* Rule 1 */}
-        <div className="flex gap-3 items-start">
-          <div className="p-2 bg-red-50 text-red-600 rounded-xl font-bold shrink-0 text-sm w-8 h-8 flex items-center justify-center">
+        <div className="flex gap-3.5 items-start">
+          <div className="p-2.5 bg-red-50 text-red-600 rounded-xl font-black shrink-0 text-sm w-9 h-9 flex items-center justify-center border border-red-100">
             ✕
           </div>
           <div>
-            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-tight">Swipe Left: HAZARD</h4>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Identify unsafe acts, non-compliant gear, or electrical dangers.</p>
+            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-tight">Swipe Left: HAZARD ⚠️</h4>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
+              Spot any safety danger? Swipe to the <strong>LEFT</strong> (or press the red button) if you see:
+            </p>
+            <ul className="text-xs text-slate-400 list-disc pl-4 mt-1 space-y-0.5 leading-normal font-medium">
+              <li>Unsafe acts or non-compliant work methods</li>
+              <li>Exposed live wires, damaged cables, or water leaks near sockets</li>
+              <li>Missing warning labels, locks, or safety safeguards</li>
+              <li>Workers ignoring required protective gear (PPE)</li>
+            </ul>
           </div>
         </div>
 
         {/* Rule 2 */}
-        <div className="flex gap-3 items-start">
-          <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl font-bold shrink-0 text-sm w-8 h-8 flex items-center justify-center">
+        <div className="flex gap-3.5 items-start">
+          <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl font-black shrink-0 text-sm w-9 h-9 flex items-center justify-center border border-emerald-100">
             ✓
           </div>
           <div>
-            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-tight">Swipe Right: SAFE</h4>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Identify proper safety protocols, protective gear, and compliant practices.</p>
-          </div>
-        </div>
-
-        {/* Rule 3 */}
-        <div className="flex gap-3 items-start">
-          <div className="p-2 bg-amber-50 text-amber-600 rounded-xl shrink-0 w-8 h-8 flex items-center justify-center">
-            <Timer size={16} />
-          </div>
-          <div>
-            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-tight">Mind the Timer</h4>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Decide within the time limit (6-10s). Letting the timer run out costs a life.</p>
-          </div>
-        </div>
-
-        {/* Rule 4 */}
-        <div className="flex gap-3 items-start">
-          <div className="p-2 bg-orange-50 text-orange-600 rounded-xl shrink-0 w-8 h-8 flex items-center justify-center">
-            <Zap size={16} className="fill-orange-500/20" />
-          </div>
-          <div>
-            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-tight">Score Multipliers & Shields</h4>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Chain perfect answers to trigger score multipliers. Get a 5-streak to recharge your Shield!</p>
-          </div>
-        </div>
-
-        {/* Rule 5 */}
-        <div className="flex gap-3 items-start">
-          <div className="p-2 bg-rose-50 text-rose-600 rounded-xl shrink-0 w-8 h-8 flex items-center justify-center">
-            <Shield size={16} className="fill-rose-500/20" />
-          </div>
-          <div>
-            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-tight">LOTO Shields</h4>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Start with 1 Life Shield that absorbs a hazard mistake. Get a 5-streak to recharge it!</p>
+            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-tight">Swipe Right: SAFE ✅</h4>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
+              Confirming correct procedures? Swipe to the <strong>RIGHT</strong> (or press the green button) if you see:
+            </p>
+            <ul className="text-xs text-slate-400 list-disc pl-4 mt-1 space-y-0.5 leading-normal font-medium">
+              <li>Fully compliant equipment, proper grounding, and safety barriers</li>
+              <li>Active Lockout/Tagout (LOTO) protocols with tags applied</li>
+              <li>Correct personal protective equipment (insulated gloves, safety glasses)</li>
+              <li>Insulated work environments, tools, and dry conditions</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -1458,11 +1439,11 @@ export default function App() {
         {/* Left: Score Badge */}
         <div className="flex items-center gap-1.5">
           <div className="p-1.5 bg-blue-50 text-blue-600 rounded-xl shrink-0 flex items-center justify-center">
-            <Zap size={14} className="fill-blue-500" />
+            <Zap size={15} className="fill-blue-500" />
           </div>
           <div>
-            <div className="text-[8px] uppercase tracking-wider text-slate-400 font-black leading-none">Score</div>
-            <div className="text-sm sm:text-base font-black text-slate-800 tabular-nums leading-none mt-0.5">{score}</div>
+            <div className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-400 font-black leading-none">Score</div>
+            <div className="text-base sm:text-lg font-black text-slate-800 tabular-nums leading-none mt-0.5">{score}</div>
           </div>
         </div>
 
@@ -1483,7 +1464,7 @@ export default function App() {
             >
               🔥
             </motion.span>
-            <span className={`text-xs font-black tabular-nums transition-colors ${streak >= 10 ? 'text-red-600 font-extrabold animate-pulse' : streak >= 5 ? 'text-orange-600 font-extrabold' : 'text-slate-600'}`}>
+            <span className={`text-sm font-black tabular-nums transition-colors ${streak >= 10 ? 'text-red-600 font-extrabold animate-pulse' : streak >= 5 ? 'text-orange-600 font-extrabold' : 'text-slate-600'}`}>
               x{streak}
             </span>
           </div>
@@ -1512,7 +1493,7 @@ export default function App() {
                 ease: "easeInOut"
               } : {}}
             >
-              <Shield size={14} className={`transition-all ${shields > 0 ? 'text-blue-500 fill-blue-500/30 drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]' : 'text-slate-300 opacity-45'}`} />
+              <Shield size={16} className={`transition-all ${shields > 0 ? 'text-blue-500 fill-blue-500/30 drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]' : 'text-slate-300 opacity-45'}`} />
             </motion.div>
             <span className="text-xs font-black text-slate-500 ml-1.5 tabular-nums">{shields}</span>
           </div>
@@ -1522,8 +1503,8 @@ export default function App() {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 text-right">
             <div>
-              <div className="text-[10px] uppercase tracking-wider text-slate-400 font-black leading-none">Best</div>
-              <div className="text-sm sm:text-base font-black text-slate-700 tabular-nums leading-none mt-0.5">
+              <div className="text-xs uppercase tracking-wider text-slate-400 font-black leading-none">Best</div>
+              <div className="text-base sm:text-lg font-black text-slate-700 tabular-nums leading-none mt-0.5">
                 {highScore > score ? highScore : score}
               </div>
             </div>
@@ -1540,10 +1521,10 @@ export default function App() {
           </button>
           <button 
             onClick={() => { setIsPaused(true); soundEffects.click(); }}
-            className="p-1.5 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors text-slate-600 cursor-pointer"
+            className="p-1.5 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors text-slate-600 cursor-pointer flex items-center justify-center"
             title="Pause Game"
           >
-            <Pause size={14} />
+            <Pause size={16} />
           </button>
         </div>
       </div>
@@ -1566,7 +1547,7 @@ export default function App() {
       </motion.div>
 
       {/* Cards Area - Highly Responsive height container */}
-      <div className="relative flex-1 w-full max-w-md h-[400px] sm:h-[460px] md:h-[500px] my-1 sm:my-2">
+      <div className="relative flex-1 w-full max-w-md h-[370px] sm:h-[440px] md:h-[490px] my-1 sm:my-2">
         <div className="absolute inset-x-2 bottom-[-10px] top-[10px] bg-white rounded-[32px] sm:rounded-[40px] shadow-md border border-slate-100 rotate-2 -z-10 opacity-70"></div>
         <div className="absolute inset-x-1 bottom-[-5px] top-[5px] bg-white rounded-[32px] sm:rounded-[40px] shadow-lg border border-slate-100 -rotate-1 -z-10 opacity-90"></div>
         {deck.length > 0 && (
@@ -1580,7 +1561,7 @@ export default function App() {
       </div>
 
       {/* Controller-Style Premium Action Buttons */}
-      <div className="w-full flex justify-center items-center gap-8 sm:gap-14 mt-3 sm:mt-6 pb-2 sm:pb-4 shrink-0">
+      <div className="w-full flex justify-center items-center gap-8 sm:gap-14 mt-3 sm:mt-6 pb-6 sm:pb-4 shrink-0">
         {/* Left: HAZARD Button */}
         <button 
           onClick={() => handleButtonSwipe('left')}
@@ -1768,9 +1749,9 @@ export default function App() {
                 <div className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
                   <X size={28} strokeWidth={2.5} />
                 </div>
-                <h4 className="text-base font-black text-slate-800 leading-none">Swipe Left is HAZARD</h4>
-                <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                  When you inspect a card with a dangerous violation (unlabeled breakers, water near electrical outlets, exposed conductors), swipe the card to the <span className="font-extrabold text-red-500">LEFT</span>!
+                <h4 className="text-base font-black text-slate-800 leading-none">Swipe Left is HAZARD ⚠️</h4>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium text-left">
+                  Inspect the card scenario closely. If you identify any risk factor, damaged wiring, exposed conductors, lack of protective PPE gear, missing lockout locks, or unsafe acts, <strong>swipe the card to the LEFT</strong> (or tap the red hazard button) to report the danger!
                 </p>
               </div>
             )}
@@ -1780,28 +1761,16 @@ export default function App() {
                 <div className="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
                   <Check size={28} strokeWidth={2.5} />
                 </div>
-                <h4 className="text-base font-black text-slate-800 leading-none">Swipe Right is SAFE</h4>
-                <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                  When the scenario represents fully compliant gear or correct LOTO protocol (insulated safety mats, calibrated multimeters, lock labels), swipe the card to the <span className="font-extrabold text-emerald-500">RIGHT</span>!
-                </p>
-              </div>
-            )}
-
-            {tutorialStep === 2 && (
-              <div className="space-y-4">
-                <div className="w-14 h-14 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
-                  <Shield size={28} className="fill-blue-500/10" />
-                </div>
-                <h4 className="text-base font-black text-slate-800 leading-none">Safety Safeguards</h4>
-                <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                  Classic Mode starts you with 1 Life Shield. Letting the timer count down to zero or ignoring hazards costs a life, but your Life Shield can absorb one mistake automatically! Get a 5-streak to recharge it.
+                <h4 className="text-base font-black text-slate-800 leading-none">Swipe Right is SAFE ✅</h4>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium text-left">
+                  If the scenario demonstrates correct lockout/tagout (LOTO) applications, proper use of insulated protective tools, active warning placards, dry conditions, or workers wearing appropriate personal protective gear (PPE), <strong>swipe the card to the RIGHT</strong> (or tap the green safe button) to verify compliance!
                 </p>
               </div>
             )}
 
             {/* Stepper Dots & Navigation */}
             <div className="flex justify-center gap-1.5 my-5">
-              {[0, 1, 2].map(idx => (
+              {[0, 1].map(idx => (
                 <div 
                   key={idx} 
                   className={`w-2 h-2 rounded-full transition-all ${tutorialStep === idx ? 'w-5 bg-blue-600' : 'bg-slate-200'}`}
@@ -1813,7 +1782,7 @@ export default function App() {
               {tutorialStep > 0 ? (
                 <button
                   onClick={() => { setTutorialStep(prev => prev - 1); soundEffects.click(); }}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs rounded-xl transition-all"
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs rounded-xl transition-all cursor-pointer"
                 >
                   Previous
                 </button>
@@ -1821,7 +1790,7 @@ export default function App() {
               
               <button
                 onClick={() => {
-                  if (tutorialStep < 2) {
+                  if (tutorialStep < 1) {
                     setTutorialStep(prev => prev + 1);
                     soundEffects.click();
                   } else {
@@ -1830,9 +1799,9 @@ export default function App() {
                     soundEffects.perfect();
                   }
                 }}
-                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition-all"
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer"
               >
-                {tutorialStep === 2 ? "Ready to Certify!" : "Next Lesson"}
+                {tutorialStep === 1 ? "Ready to Certify!" : "Next Lesson"}
               </button>
             </div>
           </motion.div>
@@ -2351,7 +2320,7 @@ export default function App() {
 
   return (
     <motion.div 
-      className={`w-full h-screen flex flex-col items-center justify-between p-4 sm:p-8 overflow-hidden font-sans select-none relative ${getAmbientGradient()}`}
+      className={`w-full h-[100dvh] flex flex-col items-center justify-between p-4 sm:p-8 overflow-hidden font-sans select-none relative ${getAmbientGradient()}`}
       animate={shake ? { x: [-10, 10, -10, 10, 0] } : {}}
       transition={{ duration: 0.4 }}
     >
