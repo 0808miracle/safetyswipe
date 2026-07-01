@@ -12,8 +12,8 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState>('start');
   const [playerName, setPlayerName] = useState(() => {
     const saved = localStorage.getItem('safetySwipePlayerName');
-    if (!saved || saved.toLowerCase() === 'anil sharma' || saved === 'Enter your name') {
-      return 'Enter Your Name';
+    if (!saved || saved.toLowerCase() === 'anil sharma' || saved === 'Enter Your Name' || saved === 'Enter your name') {
+      return '';
     }
     return saved;
   });
@@ -37,8 +37,8 @@ export default function App() {
   const [shields, setShields] = useState(0);
   const [perfectSwipes, setPerfectSwipes] = useState(0);
   const [consecutivePerfects, setConsecutivePerfects] = useState(0);
-  const [isPractice, setIsPractice] = useState(false);
-  const [isSuddenDeath, setIsSuddenDeath] = useState(false);
+  const isPractice = false;
+  const isSuddenDeath = false;
   const [isPaused, setIsPaused] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [streakSplash, setStreakSplash] = useState<string | null>(null);
@@ -159,7 +159,6 @@ export default function App() {
     if (timeDifficulty === 'relaxed') t = t * 2;
     else if (timeDifficulty === 'blitz') t = Math.round(t * 0.5);
     
-    if (isSuddenDeath) t = Math.round(t * 0.5); // Fast speed round in Sudden Death!
     return t;
   };
 
@@ -226,17 +225,9 @@ export default function App() {
     setScore(0);
     setStreak(0);
     
-    // Set lives according to game mode
-    if (isSuddenDeath) {
-      setLives(1);
-      setShields(0);
-    } else if (isPractice) {
-      setLives(99);
-      setShields(99);
-    } else {
-      setLives(3);
-      setShields(0); // Standard modes give 0 life shields at start!
-    }
+    // Set lives and shields to standard levels
+    setLives(3);
+    setShields(1); // Start with 1 shield as per standard rules
     
     setPerfectSwipes(0);
     setConsecutivePerfects(0);
@@ -265,7 +256,6 @@ export default function App() {
     
     // Unlock first play achievements
     unlockAchievement('first_blood');
-    if (isSuddenDeath) unlockAchievement('sudden_death_unlock'); // potential achievement
     
     soundEffects.click();
 
@@ -333,7 +323,7 @@ export default function App() {
       // Calculate Perfect Swipe bonus (decided in less than half the time limit)
       const isPerfect = (timeLeft / timeLimit) > 0.5;
       const perfectBonus = isPerfect ? 1.5 : 1.0;
-      const modeMultiplier = isSuddenDeath ? 2.0 : 1.0;
+      const modeMultiplier = 1.0;
       
       let nextPerfectSwipes = perfectSwipes;
       let nextConsecPerfects = consecutivePerfects;
@@ -381,7 +371,7 @@ export default function App() {
       }));
       
       // Shield reward for high streak (rewards 1 Shield at 5x streak)
-      if (newStreak === 5 && shields < 1 && !isSuddenDeath && !isPractice) {
+      if (newStreak === 5 && shields < 1) {
         setShields(1);
         setStreakSplash("🛡️ SHIELD RECHARGED! (1 LOTO SAVER)");
         setTimeout(() => setStreakSplash(null), 2000);
@@ -439,7 +429,6 @@ export default function App() {
       if (newScore >= 150) unlockAchievement('score_1500_ach');
       if (newScore >= 500) unlockAchievement('score_5000');
       if (nextConsecPerfects >= 3) unlockAchievement('perfect_triple');
-      if (isSuddenDeath && newScore >= 200) unlockAchievement('sudden_master');
       
       isTransitioningRef.current = true;
       setTimeout(() => {
@@ -452,16 +441,7 @@ export default function App() {
       setStreak(0);
       setConsecutivePerfects(0);
       
-      if (isPractice) {
-        // Sandbox Practice: No lives/shields consumed
-        soundEffects.incorrect();
-        setGameState('explanation');
-        setExplanation({
-          correct: false,
-          title: "💡 Practice Hint",
-          text: currentCard.explanation
-        });
-      } else if (shields > 0) {
+      if (shields > 0) {
         // Shield Absorbed! Saves life
         setShields(prev => prev - 1);
         soundEffects.correct(); // Positive chime because shield saved them
@@ -491,7 +471,7 @@ export default function App() {
         });
       }
     }
-  }, [gameState, deck, currentIndex, streak, lives, score, shields, perfectSwipes, consecutivePerfects, timeLimit, timeLeft, isSuddenDeath, isPractice, unlockAchievement, recordScenarioSeen]);
+  }, [gameState, deck, currentIndex, streak, lives, score, shields, perfectSwipes, consecutivePerfects, timeLimit, timeLeft, unlockAchievement, recordScenarioSeen]);
 
   const nextCard = () => {
     setLeaveX(0);
@@ -520,7 +500,7 @@ export default function App() {
   };
 
   const closeExplanation = () => {
-    if (lives <= 0 && !isPractice) {
+    if (lives <= 0) {
       // Game Over: Record score and calculate XP Rank
       const earnedXP = score;
       const newLifetimeXP = lifetimeXP + earnedXP;
@@ -551,7 +531,7 @@ export default function App() {
         score: score,
         rank: rankText,
         date: new Date().toISOString().split('T')[0],
-        mode: gameMode + (isSuddenDeath ? " (Sudden Death)" : "")
+        mode: gameMode
       };
       const newLeaderboard = [...leaderboard, entry]
         .sort((a, b) => b.score - a.score)
@@ -659,8 +639,6 @@ export default function App() {
   const getAmbientGradient = () => {
     if (isHighContrast) return 'bg-white border-8 border-slate-950 text-slate-950';
     if (gameState === 'playing' || gameState === 'explanation') {
-      if (isPractice) return 'bg-gradient-to-tr from-violet-50 via-purple-50 to-indigo-100';
-      if (isSuddenDeath) return 'bg-gradient-to-tr from-slate-950 via-red-950 to-stone-900 text-white';
       if (lives === 3) return 'bg-gradient-to-tr from-emerald-50 via-teal-50/70 to-blue-50';
       if (lives === 2) return 'bg-gradient-to-tr from-amber-50 via-yellow-50/50 to-orange-50';
       return 'bg-gradient-to-tr from-rose-100 via-red-50 to-amber-100 animate-pulse';
@@ -677,7 +655,7 @@ export default function App() {
       <div className="w-full flex justify-between items-center mb-3 shrink-0">
         <button 
           onClick={() => { setShowTutorial(true); setTutorialStep(0); soundEffects.click(); }}
-          className="px-2.5 py-1.5 bg-white/80 backdrop-blur-xs rounded-lg shadow-xs hover:bg-slate-50 border border-slate-200/60 text-slate-500 hover:text-slate-900 transition-all flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider"
+          className="px-2.5 py-1.5 bg-white/80 backdrop-blur-xs rounded-lg shadow-xs hover:bg-slate-50 border border-slate-200/60 text-slate-500 hover:text-slate-900 transition-all flex items-center gap-1.5 text-xs font-black uppercase tracking-wider"
           id="btn-tutorial"
         >
           <Info size={13} /> How to Play
@@ -706,19 +684,19 @@ export default function App() {
       <div className="w-full bg-white/90 backdrop-blur-md border border-slate-100 rounded-3xl p-5 shadow-xl flex flex-col gap-3">
         {/* Title & Logo */}
         <div className="flex items-center gap-2.5 mb-1 justify-center shrink-0">
-          <div className="w-9 h-9 bg-red-100 text-red-500 rounded-xl flex items-center justify-center shadow-xs">
-            <Zap size={20} className="fill-current animate-pulse" />
+          <div className="w-10 h-10 bg-red-100 text-red-500 rounded-xl flex items-center justify-center shadow-xs">
+            <Zap size={22} className="fill-current animate-pulse" />
           </div>
           <div className="text-left">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 leading-none">Safety Swipe</h1>
-            <p className="text-[7.5px] sm:text-[8.5px] text-slate-400 font-extrabold uppercase tracking-widest mt-0.5">Electrical & Industrial Compliance</p>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 leading-none">Safety Swipe</h1>
+            <p className="text-[10.5px] sm:text-xs text-slate-400 font-extrabold uppercase tracking-widest mt-0.5">Electrical & Industrial Compliance</p>
           </div>
         </div>
 
         {/* Input player name */}
-        <div className="bg-slate-50/50 rounded-xl p-2.5 border border-slate-100 shadow-xs w-full">
+        <div className="bg-slate-50/50 rounded-xl p-3 border border-slate-100 shadow-xs w-full">
           <div className="flex gap-2 items-center">
-            <div className="text-lg bg-white w-7 h-7 rounded-lg flex items-center justify-center border border-slate-100 shadow-xs shrink-0">
+            <div className="text-xl bg-white w-8 h-8 rounded-lg flex items-center justify-center border border-slate-100 shadow-xs shrink-0">
               👷
             </div>
             <input 
@@ -726,21 +704,21 @@ export default function App() {
               placeholder="Enter Your Name" 
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
-              className="flex-1 px-2 py-1 bg-transparent focus:outline-none text-xs font-bold text-slate-800 placeholder-slate-400"
+              className="flex-1 px-2.5 py-1.5 bg-transparent focus:outline-none text-sm font-bold text-slate-800 placeholder-slate-400"
               id="input-player-name"
             />
           </div>
         </div>
 
-        {/* Quiz Selection & Operation Mode */}
-        <div className="space-y-3">
+        {/* Quiz Selection & Speed Settings */}
+        <div className="space-y-4">
           {/* Quiz Category */}
           <div>
-            <div className="text-[7.5px] font-black text-slate-400 uppercase tracking-widest mb-1 text-left">Quiz Selection Group</div>
+            <div className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 text-left">Quiz Selection Group</div>
             <div className="flex gap-2 w-full">
               <button 
                 onClick={() => { setGameMode('general'); soundEffects.click(); }}
-                className={`flex-1 py-1.5 px-2 rounded-lg border transition-all text-[11px] font-black flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 px-3 rounded-lg border transition-all text-xs sm:text-sm font-black flex items-center justify-center gap-1.5 ${
                   gameMode === 'general' 
                     ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-xs' 
                     : 'border-slate-100 bg-slate-50/50 text-slate-500 hover:bg-slate-50'
@@ -751,7 +729,7 @@ export default function App() {
               </button>
               <button 
                 onClick={() => { setGameMode('industrial'); soundEffects.click(); }}
-                className={`flex-1 py-1.5 px-2 rounded-lg border transition-all text-[11px] font-black flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 px-3 rounded-lg border transition-all text-xs sm:text-sm font-black flex items-center justify-center gap-1.5 ${
                   gameMode === 'industrial' 
                     ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-xs' 
                     : 'border-slate-100 bg-slate-50/50 text-slate-500 hover:bg-slate-50'
@@ -763,37 +741,9 @@ export default function App() {
             </div>
           </div>
 
-          {/* Operation Mode */}
-          <div>
-            <div className="text-[7.5px] font-black text-slate-400 uppercase tracking-widest mb-1 text-left font-sans">Operation Mode</div>
-            <div className="grid grid-cols-3 gap-1.5">
-              <button
-                onClick={() => { setIsPractice(false); setIsSuddenDeath(false); soundEffects.click(); }}
-                className={`py-1.5 rounded-lg border transition-all flex flex-col items-center justify-center ${!isPractice && !isSuddenDeath ? 'bg-slate-900 text-white border-slate-950 shadow-xs font-bold' : 'border-slate-100 bg-slate-50/50 text-slate-600 hover:bg-slate-50'}`}
-              >
-                <span className="text-[10px] font-black leading-none">Classic</span>
-                <span className="text-[6px] font-bold opacity-75 uppercase tracking-wider mt-0.5">3 Lives</span>
-              </button>
-              <button
-                onClick={() => { setIsPractice(true); setIsSuddenDeath(false); soundEffects.click(); }}
-                className={`py-1.5 rounded-lg border transition-all flex flex-col items-center justify-center ${isPractice ? 'bg-violet-600 text-white border-violet-700 shadow-xs font-bold' : 'border-slate-100 bg-slate-50/50 text-slate-600 hover:bg-slate-50'}`}
-              >
-                <span className="text-[10px] font-black leading-none">Practice</span>
-                <span className="text-[6px] font-bold opacity-75 uppercase tracking-wider mt-0.5">No Timer</span>
-              </button>
-              <button
-                onClick={() => { setIsPractice(false); setIsSuddenDeath(true); soundEffects.click(); }}
-                className={`py-1.5 rounded-lg border transition-all flex flex-col items-center justify-center ${isSuddenDeath ? 'bg-red-600 text-white border-red-700 shadow-xs font-bold' : 'border-slate-100 bg-slate-50/50 text-slate-600 hover:bg-slate-50'}`}
-              >
-                <span className="text-[10px] font-black leading-none">Sudden</span>
-                <span className="text-[6px] font-bold opacity-75 uppercase tracking-wider mt-0.5">1 Life</span>
-              </button>
-            </div>
-          </div>
-
           {/* Time Limit Speed Preset (Phase 2) */}
           <div>
-            <div className="text-[7.5px] font-black text-slate-400 uppercase tracking-widest mb-1 text-left font-sans flex justify-between">
+            <div className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 text-left font-sans flex justify-between">
               <span>Time limit Speed preset</span>
               {timeDifficulty === 'blitz' && <span className="text-orange-500 font-extrabold animate-pulse">⚡ 1.5x XP</span>}
               {timeDifficulty === 'relaxed' && <span className="text-violet-500 font-bold">0.75x XP</span>}
@@ -808,33 +758,33 @@ export default function App() {
                   key={preset.id}
                   type="button"
                   onClick={() => { setTimeDifficulty(preset.id as any); localStorage.setItem('safetySwipeTimeDifficulty', preset.id); soundEffects.click(); }}
-                  className={`py-1 rounded-lg border transition-all flex flex-col items-center justify-center ${
+                  className={`py-1.5 rounded-lg border transition-all flex flex-col items-center justify-center ${
                     timeDifficulty === preset.id 
                       ? 'bg-blue-600 text-white border-blue-700 shadow-xs font-bold' 
                       : 'border-slate-100 bg-slate-50/50 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <span className="text-[9px] font-black leading-none">{preset.label}</span>
-                  <span className="text-[5.5px] font-bold opacity-75 uppercase tracking-wider mt-0.5">{preset.desc}</span>
+                  <span className="text-[11px] sm:text-xs font-black leading-none">{preset.label}</span>
+                  <span className="text-[8px] sm:text-[9px] font-bold opacity-75 uppercase tracking-wider mt-1">{preset.desc}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Volume Control & Soundboard (Phase 2) */}
-          <div className="bg-slate-50/70 rounded-xl p-2 rounded-lg border border-slate-100/50 text-left">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[7.5px] font-black text-slate-400 uppercase tracking-widest block font-sans">Synthesizer Master Volume</span>
-              <span className="text-[8.5px] font-black text-slate-600 tabular-nums">{isMuted ? 'Muted' : `${volume}%`}</span>
+          <div className="bg-slate-50/70 rounded-xl p-3 rounded-lg border border-slate-100/50 text-left">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest block font-sans">Synthesizer Master Volume</span>
+              <span className="text-xs sm:text-sm font-black text-slate-600 tabular-nums">{isMuted ? 'Muted' : `${volume}%`}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <button 
                 type="button"
                 onClick={toggleSound}
                 className="text-slate-500 hover:text-slate-800 transition-colors"
                 title={isMuted ? 'Unmute' : 'Mute'}
               >
-                {isMuted || volume === 0 ? <VolumeX size={12} /> : <Volume2 size={12} />}
+                {isMuted || volume === 0 ? <VolumeX size={14} /> : <Volume2 size={14} />}
               </button>
               <input 
                 type="range" 
@@ -846,8 +796,8 @@ export default function App() {
               />
             </div>
             {/* Quick soundboard tester */}
-            <div className="mt-1 flex flex-wrap gap-1 items-center">
-              <span className="text-[6px] font-black text-slate-400 uppercase tracking-wider mr-1">Soundboard:</span>
+            <div className="mt-2.5 flex flex-wrap gap-1.5 items-center">
+              <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wider mr-1">Soundboard:</span>
               {[
                 { name: 'Click', effect: () => soundEffects.click() },
                 { name: 'Correct', effect: () => soundEffects.correct() },
@@ -859,7 +809,7 @@ export default function App() {
                   key={s.name}
                   type="button"
                   onClick={(e) => { e.stopPropagation(); s.effect(); }}
-                  className="px-1.5 py-0.5 bg-white border border-slate-200/60 rounded text-[6px] font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100/70 transition-all active:scale-95 shadow-2xs"
+                  className="px-2 py-1 bg-white border border-slate-200/60 rounded text-[9px] sm:text-[10px] font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100/70 transition-all active:scale-95 shadow-2xs"
                 >
                   {s.name}
                 </button>
@@ -868,15 +818,22 @@ export default function App() {
           </div>
         </div>
 
-        <hr className="border-slate-100/80 my-1" />
+        <hr className="border-slate-100/80 my-2" />
 
         {/* Action Button & Sub Menus */}
         <div className="w-full">
+          {/* Validation Warning */}
+          {!playerName.trim() && (
+            <p className="text-xs text-red-500 font-extrabold text-center mb-2.5 animate-pulse">
+              ⚠️ Please enter your name above to start the safety game
+            </p>
+          )}
+
           {/* Main launch button */}
           <button 
             onClick={() => setGameState('rules')}
             disabled={!playerName.trim()}
-            className="w-full py-2.5 bg-slate-950 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all shadow-sm mb-2 active:scale-98"
+            className="w-full py-3 bg-slate-950 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all shadow-sm mb-2 active:scale-98 cursor-pointer"
             id="btn-play-game"
           >
             <Play size={14} className="fill-current" /> Play Now
@@ -886,31 +843,31 @@ export default function App() {
           <div className="grid grid-cols-3 gap-1.5 w-full">
             <button 
               onClick={() => { setGameState('encyclopedia'); soundEffects.click(); }}
-              className="py-1.5 bg-white text-slate-700 rounded-lg font-bold text-[9px] flex flex-col items-center justify-center gap-1 hover:bg-slate-50 transition-all shadow-xs border border-slate-200 uppercase tracking-wider"
+              className="py-2 bg-white text-slate-700 rounded-lg font-bold text-xs flex flex-col items-center justify-center gap-1 hover:bg-slate-50 transition-all shadow-xs border border-slate-200 uppercase tracking-wider"
               id="btn-manual"
             >
-              <BookOpen size={13} className="text-blue-500" /> Manual
+              <BookOpen size={14} className="text-blue-500" /> Manual
             </button>
             <button 
               onClick={() => { setGameState('stats'); soundEffects.click(); }}
-              className="py-1.5 bg-white text-slate-700 rounded-lg font-bold text-[9px] flex flex-col items-center justify-center gap-1 hover:bg-slate-50 transition-all shadow-xs border border-slate-200 uppercase tracking-wider"
+              className="py-2 bg-white text-slate-700 rounded-lg font-bold text-xs flex flex-col items-center justify-center gap-1 hover:bg-slate-50 transition-all shadow-xs border border-slate-200 uppercase tracking-wider"
               id="btn-stats"
             >
-              <Trophy size={13} className="text-amber-500" /> Standings
+              <Trophy size={14} className="text-amber-500" /> Standings
             </button>
             <button 
               onClick={() => { setGameState('achievements'); soundEffects.click(); }}
-              className="py-1.5 bg-white text-slate-700 rounded-lg font-bold text-[9px] flex flex-col items-center justify-center gap-1 hover:bg-slate-50 transition-all shadow-xs border border-slate-200 uppercase tracking-wider"
+              className="py-2 bg-white text-slate-700 rounded-lg font-bold text-xs flex flex-col items-center justify-center gap-1 hover:bg-slate-50 transition-all shadow-xs border border-slate-200 uppercase tracking-wider"
               id="btn-achievements"
             >
-              <Award size={13} className="text-emerald-500" /> Medals
+              <Award size={14} className="text-emerald-500" /> Medals
             </button>
           </div>
         </div>
       </div>
 
       {highScore > 0 ? (
-        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none text-center mt-3">
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest leading-none text-center mt-3">
           Compliance Record Peak: {highScore} PTS
         </p>
       ) : (
@@ -930,7 +887,7 @@ export default function App() {
       </div>
       
       <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">Rules & Regulations</h1>
-      <p className="text-sm text-slate-500 mb-6 font-medium">
+      <p className="text-sm sm:text-base text-slate-500 mb-6 font-medium">
         Welcome, <span className="font-extrabold text-slate-800">👷 {playerName}</span>! Please review the safety protocol before beginning.
       </p>
 
@@ -942,8 +899,8 @@ export default function App() {
             ✕
           </div>
           <div>
-            <h4 className="text-sm font-black text-slate-800 leading-tight">Swipe Left: HAZARD</h4>
-            <p className="text-xs text-slate-500 mt-0.5">Identify unsafe acts, non-compliant gear, or electrical dangers.</p>
+            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-tight">Swipe Left: HAZARD</h4>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Identify unsafe acts, non-compliant gear, or electrical dangers.</p>
           </div>
         </div>
 
@@ -953,8 +910,8 @@ export default function App() {
             ✓
           </div>
           <div>
-            <h4 className="text-sm font-black text-slate-800 leading-tight">Swipe Right: SAFE</h4>
-            <p className="text-xs text-slate-500 mt-0.5">Identify proper safety protocols, protective gear, and compliant practices.</p>
+            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-tight">Swipe Right: SAFE</h4>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Identify proper safety protocols, protective gear, and compliant practices.</p>
           </div>
         </div>
 
@@ -964,8 +921,8 @@ export default function App() {
             <Timer size={16} />
           </div>
           <div>
-            <h4 className="text-sm font-black text-slate-800 leading-tight">Mind the Timer</h4>
-            <p className="text-xs text-slate-500 mt-0.5">Decide within the time limit (6-10s). Letting the timer run out costs a life.</p>
+            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-tight">Mind the Timer</h4>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Decide within the time limit (6-10s). Letting the timer run out costs a life.</p>
           </div>
         </div>
 
@@ -975,8 +932,8 @@ export default function App() {
             <Zap size={16} className="fill-orange-500/20" />
           </div>
           <div>
-            <h4 className="text-sm font-black text-slate-800 leading-tight">Score Multipliers & Shields</h4>
-            <p className="text-xs text-slate-500 mt-0.5">Chain perfect answers to trigger score multipliers. Get a 5-streak to recharge your Shield!</p>
+            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-tight">Score Multipliers & Shields</h4>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Chain perfect answers to trigger score multipliers. Get a 5-streak to recharge your Shield!</p>
           </div>
         </div>
 
@@ -986,8 +943,8 @@ export default function App() {
             <Shield size={16} className="fill-rose-500/20" />
           </div>
           <div>
-            <h4 className="text-sm font-black text-slate-800 leading-tight">Standard Shields</h4>
-            <p className="text-xs text-slate-500 mt-0.5">Classic Mode equips you with 1 Life Shield that absorbs one hazard mistake!</p>
+            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-tight">LOTO Shields</h4>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Start with 1 Life Shield that absorbs a hazard mistake. Get a 5-streak to recharge it!</p>
           </div>
         </div>
       </div>
@@ -1036,8 +993,8 @@ export default function App() {
               {ach.icon}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className={`font-black text-sm truncate ${ach.unlocked ? 'text-slate-900' : 'text-slate-500'}`}>{ach.title}</h3>
-              <p className="text-xs text-slate-500 leading-tight mt-0.5">{ach.description}</p>
+              <h3 className={`font-black text-sm sm:text-base truncate ${ach.unlocked ? 'text-slate-900' : 'text-slate-500'}`}>{ach.title}</h3>
+              <p className="text-xs sm:text-sm text-slate-500 leading-tight mt-0.5">{ach.description}</p>
             </div>
             {ach.unlocked && <Check className="text-emerald-500 shrink-0" size={18} />}
           </div>
@@ -1047,7 +1004,7 @@ export default function App() {
       <div className="pt-3 shrink-0">
         <button 
           onClick={() => { setGameState('start'); soundEffects.click(); }}
-          className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md"
+          className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
         >
           Go to Main Page / Leave Game
         </button>
@@ -1092,7 +1049,7 @@ export default function App() {
             placeholder="Search regulations & guidelines..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2.5 text-sm font-bold rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -1102,7 +1059,7 @@ export default function App() {
             <button
               key={cat}
               onClick={() => { setSelectedCategory(cat); soundEffects.click(); }}
-              className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap border transition-all ${
+              className={`px-3 py-2 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap border transition-all ${
                 selectedCategory === cat 
                   ? 'bg-blue-600 text-white border-blue-700 shadow-sm' 
                   : 'bg-white text-slate-500 hover:bg-slate-50 border-slate-200'
@@ -1115,11 +1072,11 @@ export default function App() {
 
         {/* Scenario List */}
         <div className="flex-1 overflow-y-auto space-y-3 no-scrollbar pr-1 pb-4">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-left mb-1">
+          <div className="text-xs font-black text-slate-400 uppercase tracking-widest text-left mb-1.5">
             Scenarios Unlocked ({filtered.length})
           </div>
           {filtered.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-xs">
+            <div className="text-center py-12 text-slate-400 text-sm">
               No guidelines match your filters.
             </div>
           ) : (
@@ -1129,14 +1086,14 @@ export default function App() {
                 className="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs text-left"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${s.isSafe ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+                  <span className={`px-2 py-0.5 rounded text-[10px] sm:text-xs font-black uppercase tracking-wider ${s.isSafe ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
                     {s.isSafe ? '✓ Safe Standard' : '✕ Hazard warning'}
                   </span>
-                  <span className="text-[8px] font-black uppercase text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">{s.category || 'Compliance'}</span>
+                  <span className="text-[10px] font-black uppercase text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">{s.category || 'Compliance'}</span>
                 </div>
-                <h4 className="text-xs font-black text-slate-800 leading-relaxed mb-2 font-sans">{s.text}</h4>
+                <h4 className="text-sm font-black text-slate-800 leading-relaxed mb-2 font-sans">{s.text}</h4>
                 <div className="bg-slate-50/70 p-2.5 rounded-xl border border-dashed border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-500 leading-relaxed"><span className="text-indigo-600 font-extrabold uppercase text-[9px] tracking-wider block mb-0.5">Official Protocol:</span>{s.explanation}</p>
+                  <p className="text-xs sm:text-sm font-bold text-slate-500 leading-relaxed"><span className="text-indigo-600 font-extrabold uppercase text-[11px] tracking-wider block mb-0.5">Official Protocol:</span>{s.explanation}</p>
                 </div>
               </div>
             ))
@@ -1146,7 +1103,7 @@ export default function App() {
         <div className="pt-3 shrink-0">
           <button 
             onClick={() => { setGameState('start'); soundEffects.click(); }}
-            className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md"
+            className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
           >
             Go to Main Page / Leave Game
           </button>
@@ -1183,7 +1140,7 @@ export default function App() {
 
       return (
         <div className="bg-white border border-slate-100 rounded-2xl p-3.5 w-full shadow-xs mb-4">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex justify-between">
+          <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex justify-between">
             <span>Score progression timeline</span>
             <span>Peak: {maxScore} pts</span>
           </div>
@@ -1229,7 +1186,7 @@ export default function App() {
               );
             })}
           </svg>
-          <div className="text-[8px] text-slate-400 mt-2 text-center font-bold uppercase tracking-widest">
+          <div className="text-[10px] text-slate-400 mt-2 text-center font-bold uppercase tracking-widest">
             ← Older Swipes —————— Active Record →
           </div>
         </div>
@@ -1267,20 +1224,20 @@ export default function App() {
           {/* Quick Metrics Bento Row */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-gradient-to-tr from-emerald-50 to-emerald-100 p-3 rounded-2xl border border-emerald-200 text-left">
-              <span className="text-[8px] font-black uppercase text-emerald-700 tracking-wider">Audit Precision</span>
+              <span className="text-[10px] sm:text-xs font-black uppercase text-emerald-700 tracking-wider">Audit Precision</span>
               <div className="text-2xl font-black text-emerald-800 leading-none mt-1">94.8%</div>
-              <span className="text-[8px] font-bold text-emerald-600 block mt-1">Compliant decision rating</span>
+              <span className="text-[10px] text-emerald-600 font-bold block mt-1">Compliant decision rating</span>
             </div>
             <div className="bg-gradient-to-tr from-amber-50 to-amber-100 p-3 rounded-2xl border border-amber-200 text-left">
-              <span className="text-[8px] font-black uppercase text-amber-700 tracking-wider">Response Speed</span>
+              <span className="text-[10px] sm:text-xs font-black uppercase text-amber-700 tracking-wider">Response Speed</span>
               <div className="text-2xl font-black text-amber-800 leading-none mt-1">{avgSpeed}ms</div>
-              <span className="text-[8px] font-bold text-amber-600 block mt-1">Average compliance time</span>
+              <span className="text-[10px] text-amber-600 font-bold block mt-1">Average compliance time</span>
             </div>
           </div>
 
           {/* Leaderboard entries */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-left">
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex justify-between">
+            <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex justify-between">
               <span>Practitioner Standings</span>
               <span>Regional Zone</span>
             </div>
@@ -1297,13 +1254,13 @@ export default function App() {
                       {idx + 1}
                     </span>
                     <div className="min-w-0">
-                      <div className="text-xs font-black text-slate-800 truncate">{user.name}</div>
-                      <div className="text-[8px] font-bold text-slate-400 truncate uppercase">{user.rank}</div>
+                      <div className="text-sm font-black text-slate-800 truncate">{user.name}</div>
+                      <div className="text-[10px] font-bold text-slate-400 truncate uppercase">{user.rank}</div>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-xs font-black text-slate-800 tabular-nums">{user.score} pts</div>
-                    <div className="text-[8px] font-semibold text-slate-400 uppercase">{user.mode}</div>
+                    <div className="text-sm font-black text-slate-800 tabular-nums">{user.score} pts</div>
+                    <div className="text-[10px] font-semibold text-slate-400 uppercase">{user.mode}</div>
                   </div>
                 </div>
               ))}
@@ -1313,14 +1270,14 @@ export default function App() {
           {/* Certificate download shortcut */}
           <button
             onClick={() => { setGameState('certificate'); soundEffects.click(); }}
-            className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-sm mb-2"
+            className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-sm mb-2 cursor-pointer"
           >
             <Award size={15} /> Open Official Training Certificate
           </button>
 
           <button 
             onClick={() => { setGameState('start'); soundEffects.click(); }}
-            className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-sm"
+            className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-sm cursor-pointer"
           >
             Go to Main Page / Leave Game
           </button>
@@ -1328,8 +1285,8 @@ export default function App() {
           <div className="mt-4 pt-4 border-t border-slate-100 w-full text-center">
             {showClearConfirm ? (
               <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-left">
-                <span className="text-[10px] font-black text-red-700 uppercase tracking-wider block">⚠️ Permanent Action</span>
-                <p className="text-[10px] text-red-600 font-medium leading-relaxed mt-0.5">Are you sure you want to wipe all high scores, daily records, and inspections?</p>
+                <span className="text-xs font-black text-red-700 uppercase tracking-wider block">⚠️ Permanent Action</span>
+                <p className="text-xs text-red-600 font-medium leading-relaxed mt-0.5">Are you sure you want to wipe all high scores, daily records, and inspections?</p>
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => {
@@ -1341,13 +1298,13 @@ export default function App() {
                       setShowClearConfirm(false);
                       soundEffects.incorrect();
                     }}
-                    className="flex-1 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-[9px] uppercase tracking-wider text-center"
+                    className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-xs uppercase tracking-wider text-center cursor-pointer"
                   >
                     Yes, Wipe All Data
                   </button>
                   <button
                     onClick={() => { setShowClearConfirm(false); soundEffects.click(); }}
-                    className="flex-1 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold text-[9px] uppercase tracking-wider text-center"
+                    className="flex-1 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold text-xs uppercase tracking-wider text-center cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -1356,7 +1313,7 @@ export default function App() {
             ) : (
               <button
                 onClick={() => { setShowClearConfirm(true); soundEffects.click(); }}
-                className="text-[10px] font-black text-red-500 hover:text-red-700 uppercase tracking-widest transition-colors py-1 inline-block"
+                className="text-xs font-black text-red-500 hover:text-red-700 uppercase tracking-widest transition-colors py-1 inline-block cursor-pointer"
               >
                 🗑️ Clear Leaderboards & Reset Records
               </button>
@@ -1382,7 +1339,7 @@ export default function App() {
         className="flex flex-col h-full max-w-md mx-auto px-4 py-6 w-full justify-between overflow-y-auto no-scrollbar"
       >
         <div className="flex justify-between items-center mb-2 shrink-0">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Training Portal</span>
+          <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Training Portal</span>
           <button 
             onClick={() => { setGameState('stats'); soundEffects.click(); }}
             className="w-9 h-9 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-500 hover:text-slate-900 border border-slate-200"
@@ -1402,65 +1359,62 @@ export default function App() {
               <Award className="text-amber-600 animate-pulse" size={48} strokeWidth={1.5} />
             </div>
             <h2 className="text-base font-bold text-amber-900 uppercase tracking-widest leading-none font-sans mb-1">Certificate of Achievement</h2>
-            <p className="text-[8px] text-slate-400 uppercase tracking-widest font-black">Authorized Safety Compliance Program</p>
+            <p className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-widest font-black">Authorized Safety Compliance Program</p>
           </div>
 
           <div className="my-4">
-            <p className="text-[9px] text-slate-500 italic">This official training award is hereby presented to</p>
+            <p className="text-xs text-slate-500 italic">This official training award is hereby presented to</p>
             <h3 className="text-2xl font-black text-slate-900 font-serif border-b border-dashed border-amber-800/30 py-2 inline-block px-8 max-w-full truncate">
               👷 {playerName || "Safety Inspector"}
             </h3>
-            <p className="text-[9px] text-slate-600 font-bold leading-relaxed max-w-xs mx-auto mt-3">
+            <p className="text-xs text-slate-600 font-bold leading-relaxed max-w-xs mx-auto mt-3">
               For completing standard electrical risk inspection protocols with an exemplary peak compliance rating of <span className="text-indigo-600 font-extrabold">{highScore} points</span>.
             </p>
             {/* Game Difficulty & Mode Badges */}
-            <div className="flex flex-wrap justify-center gap-1 mt-3">
-              <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+            <div className="flex flex-wrap justify-center gap-1.5 mt-3">
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded bg-amber-100 text-amber-800 border border-amber-200">
                 {gameMode === 'industrial' ? 'Industrial' : 'General'} Module
               </span>
-              <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded bg-blue-100 text-blue-800 border border-blue-200">
                 {timeDifficulty === 'blitz' ? '⚡ Blitz Speed' : timeDifficulty === 'relaxed' ? 'Relaxed Speed' : 'Standard Speed'}
-              </span>
-              <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-200">
-                {isPractice ? 'Practice' : isSuddenDeath ? 'Sudden Death' : 'Classic Mode'}
               </span>
             </div>
           </div>
 
           <div className="flex justify-between items-end border-t border-slate-200/50 pt-4">
             <div className="text-left">
-              <span className="text-[8px] text-slate-400 uppercase tracking-widest font-black block">Completion Date</span>
-              <span className="text-[10px] font-extrabold text-slate-700">{formattedDate}</span>
+              <span className="text-[10px] text-slate-400 uppercase tracking-widest font-black block">Completion Date</span>
+              <span className="text-xs font-extrabold text-slate-700">{formattedDate}</span>
             </div>
             {/* Digital Seal stamp */}
             <div className="w-14 h-14 border-4 border-double border-amber-600 text-amber-600 rounded-full flex flex-col items-center justify-center rotate-12 shrink-0">
-              <span className="text-[6px] font-black uppercase">Official</span>
+              <span className="text-[8px] font-black uppercase">Official</span>
               <Star size={10} className="fill-amber-600" />
-              <span className="text-[6px] font-black uppercase">Approved</span>
+              <span className="text-[8px] font-black uppercase">Approved</span>
             </div>
             <div className="text-right">
-              <span className="text-[8px] text-slate-400 uppercase tracking-widest font-black block">Safety Rank</span>
-              <span className="text-[10px] font-extrabold text-slate-700">{rankInfo.badge} {rankInfo.title}</span>
+              <span className="text-[10px] text-slate-400 uppercase tracking-widest font-black block">Safety Rank</span>
+              <span className="text-xs font-extrabold text-slate-700">{rankInfo.badge} {rankInfo.title}</span>
             </div>
           </div>
         </div>
 
         {/* Action Button */}
         <div className="space-y-2 shrink-0">
-          <p className="text-[10px] text-slate-400 font-bold text-center leading-none">Screenshot this certificate to share with your compliance officer!</p>
+          <p className="text-xs text-slate-400 font-bold text-center leading-none">Screenshot this certificate to share with your compliance officer!</p>
           <button
             onClick={() => {
               window.print();
               soundEffects.click();
             }}
-            className="w-full py-3.5 bg-slate-900 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-md"
+            className="w-full py-3.5 bg-slate-900 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-md cursor-pointer"
           >
             <Download size={14} /> Print / Save PDF
           </button>
           
           <button 
             onClick={() => { setGameState('start'); soundEffects.click(); }}
-            className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-bold text-xs flex items-center justify-center gap-1 transition-all"
+            className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-bold text-xs flex items-center justify-center gap-1 transition-all cursor-pointer"
           >
             Go to Main Page / Leave Game
           </button>
@@ -1537,46 +1491,38 @@ export default function App() {
           
           {/* Health section / Lives Display */}
           <div className="flex gap-0.5">
-            {isPractice ? (
-              <span className="text-xs font-bold text-indigo-600 uppercase tracking-widest leading-none bg-indigo-50 px-1.5 py-0.5 rounded">Practice</span>
-            ) : (
-              [...Array(isSuddenDeath ? 1 : 3)].map((_, i) => (
-                <span key={i} className="text-xs sm:text-sm transition-all duration-300 filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
-                  {i < lives ? '❤️' : '🖤'}
-                </span>
-              ))
-            )}
+            {[...Array(3)].map((_, i) => (
+              <span key={i} className="text-xs sm:text-sm transition-all duration-300 filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
+                {i < lives ? '❤️' : '🖤'}
+              </span>
+            ))}
           </div>
 
-          {/* Life Shield indicator (Section 1, Rec 2) */}
-          {!isPractice && !isSuddenDeath && (
-            <>
-              <div className="h-3 w-px bg-slate-200"></div>
-              <div className="flex items-center" title="LOTO Safety Shield absorbs one mistake!">
-                <motion.div
-                  animate={shields > 0 ? {
-                    scale: [1, 1.15, 1],
-                    rotate: [0, 5, -5, 0]
-                  } : {}}
-                  transition={shields > 0 ? {
-                    repeat: Infinity,
-                    duration: 3,
-                    ease: "easeInOut"
-                  } : {}}
-                >
-                  <Shield size={14} className={`transition-all ${shields > 0 ? 'text-blue-500 fill-blue-500/30 drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]' : 'text-slate-300 opacity-45'}`} />
-                </motion.div>
-                <span className="text-[9px] font-black text-slate-500 ml-0.5 tabular-nums">{shields}</span>
-              </div>
-            </>
-          )}
+          {/* Life Shield indicator */}
+          <div className="h-3 w-px bg-slate-200"></div>
+          <div className="flex items-center" title="LOTO Safety Shield absorbs one mistake!">
+            <motion.div
+              animate={shields > 0 ? {
+                scale: [1, 1.15, 1],
+                rotate: [0, 5, -5, 0]
+              } : {}}
+              transition={shields > 0 ? {
+                repeat: Infinity,
+                duration: 3,
+                ease: "easeInOut"
+              } : {}}
+            >
+              <Shield size={14} className={`transition-all ${shields > 0 ? 'text-blue-500 fill-blue-500/30 drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]' : 'text-slate-300 opacity-45'}`} />
+            </motion.div>
+            <span className="text-xs font-black text-slate-500 ml-1.5 tabular-nums">{shields}</span>
+          </div>
         </div>
 
         {/* Right: Best Score & Pause button */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 text-right">
             <div>
-              <div className="text-[8px] uppercase tracking-wider text-slate-400 font-black leading-none">Best</div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-400 font-black leading-none">Best</div>
               <div className="text-sm sm:text-base font-black text-slate-700 tabular-nums leading-none mt-0.5">
                 {highScore > score ? highScore : score}
               </div>
@@ -1587,14 +1533,14 @@ export default function App() {
           </div>
           <button 
             onClick={() => { if (confirm("Leave current game and return to main menu? Your progress will not be saved.")) { setGameState('start'); soundEffects.click(); } }}
-            className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors text-[10px] font-black uppercase shrink-0 border border-red-100"
+            className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors text-xs font-black uppercase shrink-0 border border-red-100 cursor-pointer"
             title="Leave Game"
           >
             Leave
           </button>
           <button 
             onClick={() => { setIsPaused(true); soundEffects.click(); }}
-            className="p-1.5 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors text-slate-600"
+            className="p-1.5 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors text-slate-600 cursor-pointer"
             title="Pause Game"
           >
             <Pause size={14} />
@@ -1603,23 +1549,21 @@ export default function App() {
       </div>
 
       {/* Glossy Progress Bar - Sleek and integrated closely */}
-      {!isPractice && (
+      <motion.div 
+        className="w-full h-1.5 sm:h-2 bg-slate-100 rounded-full overflow-hidden mb-2 sm:mb-4 shadow-inner shrink-0 border border-slate-50 relative"
+        animate={timeLeft < 3000 ? {
+          scale: [1, 1.02, 1],
+          borderColor: ['rgba(226,232,240,1)', 'rgba(239,68,68,0.5)', 'rgba(226,232,240,1)'],
+        } : {}}
+        transition={{ repeat: Infinity, duration: 0.5, ease: "easeInOut" }}
+      >
         <motion.div 
-          className="w-full h-1.5 sm:h-2 bg-slate-100 rounded-full overflow-hidden mb-2 sm:mb-4 shadow-inner shrink-0 border border-slate-50 relative"
-          animate={timeLeft < 3000 ? {
-            scale: [1, 1.02, 1],
-            borderColor: ['rgba(226,232,240,1)', 'rgba(239,68,68,0.5)', 'rgba(226,232,240,1)'],
-          } : {}}
-          transition={{ repeat: Infinity, duration: 0.5, ease: "easeInOut" }}
-        >
-          <motion.div 
-            className={`h-full rounded-full ${timeLeft < 3000 ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-[0_0_12px_rgba(239,68,68,0.8)] animate-pulse' : 'bg-gradient-to-r from-blue-400 to-indigo-500'}`}
-            initial={{ width: '100%' }}
-            animate={{ width: `${(timeLeft / timeLimit) * 100}%` }}
-            transition={{ ease: "linear", duration: 0.05 }}
-          />
-        </motion.div>
-      )}
+          className={`h-full rounded-full ${timeLeft < 3000 ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-[0_0_12px_rgba(239,68,68,0.8)] animate-pulse' : 'bg-gradient-to-r from-blue-400 to-indigo-500'}`}
+          initial={{ width: '100%' }}
+          animate={{ width: `${(timeLeft / timeLimit) * 100}%` }}
+          transition={{ ease: "linear", duration: 0.05 }}
+        />
+      </motion.div>
 
       {/* Cards Area - Highly Responsive height container */}
       <div className="relative flex-1 w-full max-w-md h-[400px] sm:h-[460px] md:h-[500px] my-1 sm:my-2">
@@ -1696,16 +1640,16 @@ export default function App() {
               {explanation.title || "Ouch!"}
             </h2>
             
-            <p className="text-slate-600 text-xs leading-relaxed mb-6 font-medium text-left bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <p className="text-slate-600 text-sm leading-relaxed mb-6 font-medium text-left bg-slate-50 p-3 rounded-xl border border-slate-100">
               {explanation.text}
             </p>
 
             <button 
               onClick={closeExplanation}
-              className="w-full py-3.5 bg-slate-950 hover:bg-slate-800 text-white rounded-xl font-bold text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-slate-950 hover:bg-slate-800 text-white rounded-xl font-bold text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
               id="btn-explanation-continue"
             >
-              {lives > 0 || isPractice ? 'Understood & Continue' : 'Finish Run'}
+              {lives > 0 ? 'Understood & Continue' : 'Finish Run'}
             </button>
           </motion.div>
         </motion.div>
@@ -2119,7 +2063,7 @@ export default function App() {
       );
 
       const speedText = timeDifficulty === 'blitz' ? 'BLITZ (1.5x SPEED)' : timeDifficulty === 'relaxed' ? 'RELAXED (0.5x SPEED)' : 'STANDARD';
-      const modeText = isPractice ? 'PRACTICE (NO TIMER)' : isSuddenDeath ? 'SUDDEN DEATH (1 LIFE)' : 'CLASSIC (3 LIVES)';
+      const modeText = 'STANDARD (3 LIVES)';
       const moduleText = gameMode === 'industrial' ? 'INDUSTRIAL' : 'GENERAL';
 
       doc.setFont('helvetica', 'bold');
@@ -2246,116 +2190,116 @@ export default function App() {
             <span className="text-xl sm:text-2xl">👷</span>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 leading-none">Evaluation Over</h1>
           </div>
-          <p className="text-[9px] sm:text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mb-2 shrink-0">
+          <p className="text-xs text-slate-400 font-extrabold uppercase tracking-widest mb-2 shrink-0">
             Inspection Complete: 👷 {playerName || 'Inspector'}
           </p>
           
           {/* Bento-style post-game grid summary layout (Section 3, Rec 12) - Extremely compact */}
           <div className="grid grid-cols-2 gap-1.5 w-full mb-2 text-left">
             {/* Total Points - Horizontal flex layout */}
-            <div className="bg-slate-900 text-white px-3 py-2 rounded-xl col-span-2 flex items-center justify-between relative overflow-hidden">
+            <div className="bg-slate-900 text-white px-3 py-2.5 rounded-xl col-span-2 flex items-center justify-between relative overflow-hidden">
               <div>
-                <span className="text-[7px] font-black uppercase text-indigo-300 tracking-widest block leading-none">Inspection Score</span>
+                <span className="text-[10px] sm:text-xs font-black uppercase text-indigo-300 tracking-widest block leading-none">Inspection Score</span>
                 <div className="text-2xl sm:text-3xl font-black mt-0.5 tabular-nums leading-none">{score}</div>
               </div>
               {score >= highScore && score > 0 && (
-                <span className="text-[8px] font-bold text-yellow-300 bg-yellow-400/10 border border-yellow-300/20 px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">New Peak! 🏅</span>
+                <span className="text-xs font-bold text-yellow-300 bg-yellow-400/10 border border-yellow-300/20 px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">New Peak! 🏅</span>
               )}
             </div>
 
             {/* Compliance accuracy */}
-            <div className="bg-white border border-slate-100 p-2 rounded-xl flex flex-col justify-between">
+            <div className="bg-white border border-slate-100 p-2.5 rounded-xl flex flex-col justify-between">
               <div>
-                <span className="text-[7px] font-black uppercase text-slate-400 tracking-widest block leading-none">Precision</span>
-                <div className="text-base sm:text-lg font-black text-emerald-600 mt-0.5 leading-none">{accuracy}%</div>
+                <span className="text-[10px] sm:text-xs font-black uppercase text-slate-400 tracking-widest block leading-none">Precision</span>
+                <div className="text-lg sm:text-xl font-black text-emerald-600 mt-0.5 leading-none">{accuracy}%</div>
               </div>
-              <span className="text-[6px] sm:text-[7px] text-slate-400 font-bold block leading-none mt-0.5">Compliant alignment</span>
+              <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold block leading-none mt-0.5">Compliant alignment</span>
             </div>
 
             {/* Average Decision Speed */}
-            <div className="bg-white border border-slate-100 p-2 rounded-xl flex flex-col justify-between">
+            <div className="bg-white border border-slate-100 p-2.5 rounded-xl flex flex-col justify-between">
               <div>
-                <span className="text-[7px] font-black uppercase text-slate-400 tracking-widest block leading-none">Decision Speed</span>
-                <div className="text-base sm:text-lg font-black text-blue-600 mt-0.5 leading-none tabular-nums">{speedMs}ms</div>
+                <span className="text-[10px] sm:text-xs font-black uppercase text-slate-400 tracking-widest block leading-none">Decision Speed</span>
+                <div className="text-lg sm:text-xl font-black text-blue-600 mt-0.5 leading-none tabular-nums">{speedMs}ms</div>
               </div>
-              <span className="text-[6px] sm:text-[7px] text-slate-400 font-bold block leading-none mt-0.5">Avg inspect interval</span>
+              <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold block leading-none mt-0.5">Avg inspect interval</span>
             </div>
 
             {/* Perfect Timings */}
-            <div className="bg-white border border-slate-100 p-2 rounded-xl flex flex-col justify-between">
+            <div className="bg-white border border-slate-100 p-2.5 rounded-xl flex flex-col justify-between">
               <div>
-                <span className="text-[7px] font-black uppercase text-slate-400 tracking-widest block leading-none">Perfect Timings</span>
-                <div className="text-base sm:text-lg font-black text-amber-500 mt-0.5 leading-none tabular-nums">⚡ {perfectSwipes}</div>
+                <span className="text-[10px] sm:text-xs font-black uppercase text-slate-400 tracking-widest block leading-none">Perfect Timings</span>
+                <div className="text-lg sm:text-xl font-black text-amber-500 mt-0.5 leading-none tabular-nums">⚡ {perfectSwipes}</div>
               </div>
-              <span className="text-[6px] sm:text-[7px] text-slate-400 font-bold block leading-none mt-0.5">Quick hazard alerts</span>
+              <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold block leading-none mt-0.5">Quick hazard alerts</span>
             </div>
 
             {/* Next rank status */}
-            <div className="bg-white border border-slate-100 p-2 rounded-xl flex flex-col justify-between">
+            <div className="bg-white border border-slate-100 p-2.5 rounded-xl flex flex-col justify-between">
               <div>
-                <span className="text-[7px] font-black uppercase text-slate-400 tracking-widest block leading-none">Safety Rank</span>
-                <div className="text-[11px] sm:text-xs font-black text-slate-800 mt-0.5 leading-tight truncate">{rankInfo.badge} {rankInfo.title}</div>
+                <span className="text-[10px] sm:text-xs font-black uppercase text-slate-400 tracking-widest block leading-none">Safety Rank</span>
+                <div className="text-xs sm:text-sm font-black text-slate-800 mt-0.5 leading-tight truncate">{rankInfo.badge} {rankInfo.title}</div>
               </div>
-              <span className="text-[6px] sm:text-[7px] text-slate-400 font-bold block leading-none mt-0.5">Cumulative standard</span>
+              <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold block leading-none mt-0.5">Cumulative standard</span>
             </div>
           </div>
 
           {/* Professional Certificate Download Card - Compact row */}
-          <div className="w-full bg-gradient-to-r from-indigo-50/60 to-amber-50/60 border border-indigo-100 rounded-xl p-2.5 text-left shadow-xs mb-2.5">
+          <div className="w-full bg-gradient-to-r from-indigo-50/60 to-amber-50/60 border border-indigo-100 rounded-xl p-3 text-left shadow-xs mb-2.5">
             <div className="flex justify-between items-center gap-2">
               <div className="min-w-0 flex-1">
-                <span className="text-[7px] font-black uppercase text-indigo-700 bg-indigo-100/50 px-1.5 py-0.5 rounded tracking-wider">Official Certification</span>
-                <h4 className="text-xs font-black text-slate-800 leading-none mt-1">Compliance Certificate</h4>
-                <p className="text-[9px] font-bold text-slate-500 leading-normal mt-1 italic truncate">
+                <span className="text-[9px] sm:text-[10px] font-black uppercase text-indigo-700 bg-indigo-100/50 px-1.5 py-0.5 rounded tracking-wider">Official Certification</span>
+                <h4 className="text-sm font-black text-slate-800 leading-none mt-1">Compliance Certificate</h4>
+                <p className="text-xs font-bold text-slate-500 leading-normal mt-1 italic truncate">
                   "{getCertificateComment(score).text}"
                 </p>
               </div>
               <button
                 onClick={downloadCertificate}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-extrabold text-[9px] flex items-center gap-1 transition-all shadow-xs shrink-0 active:scale-95"
+                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-extrabold text-xs flex items-center gap-1 transition-all shadow-xs shrink-0 active:scale-95 cursor-pointer"
               >
-                <Download size={10} strokeWidth={3} /> PDF
+                <Download size={12} strokeWidth={3} /> PDF
               </button>
             </div>
           </div>
 
           {/* Social Sharing Compact Row */}
           <div className="w-full mb-3 text-center flex items-center justify-between gap-2 px-1 shrink-0">
-            <span className="text-[7px] sm:text-[8px] font-black uppercase text-slate-400 tracking-widest shrink-0">Share Compliance:</span>
+            <span className="text-xs font-black uppercase text-slate-400 tracking-widest shrink-0">Share Compliance:</span>
             <div className="flex gap-1.5">
               {/* LinkedIn */}
               <button
                 onClick={() => shareOnSocial('linkedin')}
-                className="w-7 h-7 bg-[#0A66C2]/5 hover:bg-[#0A66C2]/15 border border-[#0A66C2]/15 text-[#0A66C2] rounded-lg flex items-center justify-center transition-colors"
+                className="w-8 h-8 bg-[#0A66C2]/5 hover:bg-[#0A66C2]/15 border border-[#0A66C2]/15 text-[#0A66C2] rounded-lg flex items-center justify-center transition-colors cursor-pointer"
                 title="Share on LinkedIn"
               >
-                <Linkedin size={11} className="fill-[#0A66C2] stroke-0" />
+                <Linkedin size={13} className="fill-[#0A66C2] stroke-0" />
               </button>
               {/* Facebook */}
               <button
                 onClick={() => shareOnSocial('facebook')}
-                className="w-7 h-7 bg-[#1877F2]/5 hover:bg-[#1877F2]/15 border border-[#1877F2]/15 text-[#1877F2] rounded-lg flex items-center justify-center transition-colors"
+                className="w-8 h-8 bg-[#1877F2]/5 hover:bg-[#1877F2]/15 border border-[#1877F2]/15 text-[#1877F2] rounded-lg flex items-center justify-center transition-colors cursor-pointer"
                 title="Share on Facebook"
               >
-                <Facebook size={11} className="fill-[#1877F2] stroke-0" />
+                <Facebook size={13} className="fill-[#1877F2] stroke-0" />
               </button>
               {/* WhatsApp */}
               <button
                 onClick={() => shareOnSocial('whatsapp')}
-                className="w-7 h-7 bg-[#25D366]/5 hover:bg-[#25D366]/15 border border-[#25D366]/15 text-[#25D366] rounded-lg flex items-center justify-center transition-colors"
+                className="w-8 h-8 bg-[#25D366]/5 hover:bg-[#25D366]/15 border border-[#25D366]/15 text-[#25D366] rounded-lg flex items-center justify-center transition-colors cursor-pointer"
                 title="Share on WhatsApp"
               >
-                <svg className="w-[11px] h-[11px] fill-current text-[#25D366]" viewBox="0 0 24 24">
+                <svg className="w-[13px] h-[13px] fill-current text-[#25D366]" viewBox="0 0 24 24">
                   <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.665.988 3.3 1.488 5.336 1.489 5.468 0 9.91-4.444 9.914-9.917.002-2.651-1.032-5.143-2.91-7.025C17.098 1.817 14.601.783 11.957.783c-5.474 0-9.919 4.446-9.923 9.922 0 2.035.53 4.02 1.536 5.76l-.973 3.561 3.648-.957zm12.355-6.52c-.33-.165-1.951-.963-2.251-1.072-.3-.109-.518-.165-.736.165-.218.33-.845 1.072-1.036 1.29-.19.218-.381.245-.71.082-1.121-.56-2.19-1.02-3.04-2.482-.224-.383.224-.356.643-1.193.07-.14.035-.262-.018-.37-.052-.109-.462-1.114-.633-1.523-.167-.399-.34-.343-.462-.35-.12-.006-.258-.007-.396-.007s-.36.052-.55.258c-.19.207-.723.707-.723 1.724s.739 2.003.842 2.14c.103.137 1.455 2.22 3.525 3.114.492.213.876.34 1.176.435.495.158.946.135 1.302.082.397-.06 1.951-.798 2.226-1.57.275-.772.275-1.436.193-1.57-.083-.134-.302-.218-.633-.383z"/>
                 </svg>
               </button>
               {/* Instagram */}
               <button
                 onClick={() => shareOnSocial('instagram')}
-                className="w-7 h-7 bg-[#E1306C]/5 hover:bg-[#E1306C]/15 border border-[#E1306C]/15 text-[#E1306C] rounded-lg flex items-center justify-center transition-colors"
+                className="w-8 h-8 bg-[#E1306C]/5 hover:bg-[#E1306C]/15 border border-[#E1306C]/15 text-[#E1306C] rounded-lg flex items-center justify-center transition-colors cursor-pointer"
                 title="Share on Instagram"
               >
-                <Instagram size={11} className="text-[#E1306C]" />
+                <Instagram size={13} className="text-[#E1306C]" />
               </button>
             </div>
           </div>
@@ -2365,7 +2309,7 @@ export default function App() {
         <div className="w-full flex flex-col items-center gap-2 mt-auto shrink-0 pb-4">
           <button
             onClick={() => { setShowMistakesReview(true); soundEffects.click(); }}
-            className={`w-full py-2 border rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all mb-1 ${
+            className={`w-full py-2.5 border rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all mb-1 cursor-pointer ${
               sessionMistakes.length > 0
                 ? 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'
                 : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
@@ -2379,14 +2323,14 @@ export default function App() {
           <div className="flex gap-2 w-full">
             <button 
               onClick={startGame}
-              className="flex-1 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-800 transition-colors shadow-sm active:scale-98"
+              className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 hover:bg-slate-800 transition-colors shadow-sm active:scale-98 cursor-pointer"
               id="btn-play-again"
             >
               <RotateCcw size={13} /> Play Again
             </button>
             <button 
               onClick={handleShare}
-              className="flex-1 py-2.5 bg-white text-slate-900 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-colors shadow-xs border border-slate-200 active:scale-98"
+              className="flex-1 py-3 bg-white text-slate-900 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-colors shadow-xs border border-slate-200 active:scale-98 cursor-pointer"
               id="btn-share-score"
             >
               <Share2 size={13} /> {shareText}
@@ -2395,7 +2339,7 @@ export default function App() {
           
           <button 
             onClick={() => { setGameState('start'); soundEffects.click(); }}
-            className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors py-1 shrink-0"
+            className="text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors py-1 shrink-0 cursor-pointer"
             id="btn-gameover-home"
           >
             Leave Game & Go to Main Page
@@ -2441,8 +2385,8 @@ export default function App() {
               {toast.icon}
             </div>
             <div>
-              <div className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider">Medal Unlocked</div>
-              <div className="font-bold">{toast.title}</div>
+              <div className="text-xs font-bold text-yellow-400 uppercase tracking-wider">Medal Unlocked</div>
+              <div className="font-bold text-sm">{toast.title}</div>
             </div>
           </motion.div>
         )}
